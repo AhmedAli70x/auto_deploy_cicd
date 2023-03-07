@@ -188,7 +188,7 @@ jobs:
           name: Install tar utility
           command: |
             yum install -y tar gzip
-            
+
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -196,7 +196,7 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
               --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" --profile default
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
 
       - run:
           name: Ensure front-end infrastructure exist
@@ -205,7 +205,7 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople \
               --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}\
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"   --profile default
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"   
 
       - run:
           name: Append Backend Ip to Ansible inventory 
