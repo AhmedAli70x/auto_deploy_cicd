@@ -1,4 +1,5 @@
-version: 1.4
+version: 2.1
+
 
 orbs: 
   slack: circleci/slack@4.10.1
@@ -177,37 +178,33 @@ jobs:
              npm audit fix --force --audit-level=critical
              npm audit --audit-level=critical
 
-  deploy-infrastructure:
+  deploy-infrastructure: # create deploy-infrastructure
     docker:
       - image: amazon/aws-cli
-      
     steps:
       - checkout
       - run:
           name: Install tar utility
           command: |
             yum install -y tar gzip
-      
       - run:
-          name: Ensure back-end infrastructure exists
+          name: Ensure Backend Infrastructure exists
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople \
               --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
-
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople \
-              --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}\
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"   
-
+              --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+              
       - run:
-          name: Append Backend Ip to Ansible inventory 
+          name: Add Backend Ip to Ansible inventory
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -215,14 +212,11 @@ jobs:
               --output text)
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
-
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-
-      - destroy-environment
-      # Here's where you will add some code to rollback on failure      
+      - destroy-environment    
 
 #   configure-infrastructure:
 #     docker:
