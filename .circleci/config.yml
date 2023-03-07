@@ -1,87 +1,65 @@
 version: 2.1
-
-
-orbs: 
+orbs:   #steps for connect slack email and massage 
   slack: circleci/slack@4.10.1
-  # aws-cli: circleci/aws-cli@2.0.6
+
 
 commands:
-  notify_on_failure:
-      steps:
-        - slack/notify:
-            event: fail
-            channel: $SLACK_DEFAULT_CHANNEL
-            template: basic_fail_1
 
-  # install_awscli:
-  #   description: install AWS CLI 
-  #   steps:
-  #     - run:
-  #         name: Intstall AWS CLI 
-  #         command: |
-  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #           unzip awscliv2.zip
-  #           sudo ./aws/install
-
-  install_ansible:
-    description: Install Ansible 
-    steps: 
-      - run: 
+  install_ansible: #we will install ansible 
+    description: Install Ansible
+    steps:
+      - run:
           name: Install Ansible
           command: |
-            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
-            sudo apt update
-            sudo apt install ansible
-
-  # destroy-environment:
-  #   description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-  #   parameters:
-  #     WorkflowID:
-  #       type: string
-  #       default: ${CIRCLE_WORKFLOW_ID:0:7}
-  #   steps:
-  #     - run:
-  #         name: Destroy environments
-  #         when: on_fail
-  #         command: |
-  #           aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}  
-  #           aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
-  #           aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} 
-
-  # aws-cli-cred-setup:
-  #   description: set-aws credentials
-  #   steps:
-  #     - run:
-  #         name: set-aws credentials
-  #         command: |
-  #           export AWS_ACCESS_KEY_ID= $AWS_ACCESS_KEY
-  #           export AWS_SECRET_ACCESS_KEY= $AWS_SECRET_KEY
-  #           export AWS_DEFAULT_REGION= $AWS_DEFAULT_REGION
-
-#   revert-migrations:
-#     description: Revert the last migration if successfully run in the current workflow.
-#     parameters:
-#       # Add parameter here     
-#     steps:
-#       - run:
-#           name: Revert migrations
-#           # Add when this will run
-#           command: |
-#             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-#             SUCCESS = 1
-#             if(( $SUCCESS==1 )); 
-#             then
-#             #  cd ~/project/backend
-#             #  npm install
-#             #  Add revert code here. You can find this in the Getting Started section.
-#               exit 1
-#             fi
+            python3 -m pip install --user ansible        
+  install_nodejs:  #we will install nodejs 13.8.0
+    description: Install Node.js 13.8.0
+    steps:
+      - run:
+          name: Install Node.js 13.8.0
+          command: |
+            # Install Node.js LTS version as our base Node.js version
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo apt install -y nodejs
+            # Use n version manager to use Node.js v13.8.0
+            sudo npm install --global n
+            sudo n 13.8.0
             
-jobs:
-
-
-
-  build-frontend:
+  revert-migrations: #this steps  for create migrations 
+    description: Revert the last migration
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/Up68KQvVZCMC32AM4i2mJR/migration_<< parameters.Workflow_ID >>)
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+              cd ~/projects/backend
+              npm install
+              npm run migration:revert
+            fi
+  destroy-environment: #step for create destroy-environment
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+    steps:
+      - run:
+          name: Destroy environment
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+jobs: #now we will bbuild our jobs
+  build-frontend: # create build-frontend
     docker:
       - image: cimg/node:13.8.0
     steps:
@@ -97,9 +75,8 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-deps
-      - notify_on_failure
 
-  build-backend:
+  build-backend: # create build-backend
     docker:
       - image: cimg/node:13.8.0
     steps:
@@ -109,74 +86,81 @@ jobs:
       - run:
           name: Back-end build
           command: |
-             cd backend
-             npm install
-             npm run build
+            cd backend
+            npm install
+            npm run build
       - save_cache:
           paths: [backend/node_modules]
           key: backend-deps
-      - notify_on_failure
 
-  test-frontend:
+  test-frontend: # create tests-frontend
     docker:
       - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-deps]
+          keys: [frontend-build]
       - run:
-          name: Build front-end unit test
+          name: test front-end
           command: |
             cd frontend
             npm install
-            npm test
-      - notify_on_failure
-
+            npm run test
                 
-  test-backend:
+  test-backend: # create test-backend
     docker:
       - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-deps]
+          keys: [backend-build]
       - run:
-          name: Back-end unit test
+          name: Test Backend 
           command: |
-             cd backend
-             npm install
-             npm test
-      - notify_on_failure
-            
-  scan-frontend:
+            cd backend
+            npm install
+            npm run test
+  scan-frontend:  # create scan-frontend
     docker:
       - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-deps]
+          keys: [frontend-build]
       - run:
-          name: Front-end unit test
+          name: scan front-end
           command: |
             cd frontend
             npm install
+            npm install oauth-sign@^0.9.0
             npm audit fix --audit-level=critical
+            #npm audit --audit-level=critical
+            
+      - slack/notify:
+          channel: project-give-your-application-auto-deploy-superpowersdone
+          event: fail
+          template: basic_fail_1
 
-  scan-backend:
+  scan-backend: # create scan-backend
     docker:
       - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-deps]
+          keys: [backend-build]
       - run:
-          name: Back-end scan
+          name: Scan Back-end 
           command: |
-             cd backend
-             npm install
-             npm audit fix --force --audit-level=critical
-             npm audit fix --force --audit-level=critical
-             npm audit --audit-level=critical
+            cd backend
+            npm install
+            #npm install oauth-sign@^0.9.0
+            npm audit fix --force --audit-level=critical
+            npm audit fix --force --audit-level=critical
+            #npm audit --audit-level=critical
+      - slack/notify:
+          channel: project-give-your-application-auto-deploy-superpowersdone
+          event: fail
+          template: basic_fail_1
 
   deploy-infrastructure: # create deploy-infrastructure
     docker:
@@ -190,7 +174,6 @@ jobs:
       - run:
           name: Ensure Backend Infrastructure exists
           command: |
-            aws configure
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
@@ -198,7 +181,6 @@ jobs:
       - run:
           name: Ensure front-end infrastructure exist
           command: |
-          
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople \
@@ -218,7 +200,7 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # - destroy-environment    
+      - destroy-environment
 
 #   configure-infrastructure:
 #     docker:
