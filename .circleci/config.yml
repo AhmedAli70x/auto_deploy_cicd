@@ -1,5 +1,4 @@
-version: 2.1
-
+version: 1.4
 
 orbs: 
   slack: circleci/slack@4.10.1
