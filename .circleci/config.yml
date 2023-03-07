@@ -182,7 +182,7 @@ jobs:
     steps:
       - checkout
       - install_awscli
-      - aws-cli-cred-setup
+      # - aws-cli-cred-setup
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -364,6 +364,7 @@ jobs:
 workflows:
   default:
     jobs:
+      - aws-cli-cred-setup
       - build-frontend
       - build-backend
       - test-frontend:
