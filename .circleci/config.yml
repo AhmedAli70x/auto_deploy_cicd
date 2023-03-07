@@ -17,6 +17,27 @@ commands:
             event: pass
             channel: $SLACK_DEFAULT_CHANNEL
             template: success_tagged_deployment_1
+
+
+  install_awscli:
+    describtion: install AWS CLI 
+    steps:
+      - run:
+          name: Intstall AWS CLI 
+          command: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+  install_ansible:
+    describtion: Install Ansible 
+    steps: 
+      - run: 
+          name: Install Ansible
+          command: |
+            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
+            sudo apt update
+            sudo apt install ansible
 #   destroy-environment:
 #     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
 #     parameters:
@@ -146,39 +167,44 @@ jobs:
              npm audit fix --force --audit-level=critical
              npm audit --audit-level=critical
 
-#   deploy-infrastructure:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Ensure back-end infrastructure exists
-#           command: |
-#             aws cloudformation deploy \
-#               --template-file .circleci/files/backend.yml \
-#               #--tags project=your-tag \
-#               # --stack-name "your back-end stack name with workflow id" \
-#               # --parameter-overrides ID="your workflow id"  
-#               exit 1
-#       - run:
-#           name: Ensure front-end infrastructure exist
-#           command: |
-#             aws cloudformation deploy \
-#               --template-file .circleci/files/frontend.yml \
-#               #--tags project=your-tag \
-#               # --stack-name "your front-end stack name with workflow id" \
-#               # --parameter-overrides ID="your workflow id"  
-#               exit 1
-#       - run:
-#           name: Add back-end ip to ansible inventory
-#           command: |
-#             # Your code here
-#             exit 1
-#       - persist_to_workspace:
-#           root: ~/
-#           paths:
-#             - project/.circleci/ansible/inventory.txt
-#       # Here's where you will add some code to rollback on failure      
+  deploy-infrastructure:
+    docker:
+      -image: cimg/base:stable
+      
+    steps:
+      - checkout
+      - install_awscli
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="your workflow id"  
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              #--tags project=udapeople \
+              # --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}\
+              # --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+
+      - run:
+          name: Append Backend Ip to Ansible inventory.txt 
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      # Here's where you will add some code to rollback on failure      
 
 #   configure-infrastructure:
 #     docker:
@@ -311,14 +337,14 @@ jobs:
 #               # your code here
 #             fi
             
-  notify_on_success:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - slack/notify:
-          event: pass
-          channel: cicd-pipelines
-          template: success_tagged_deployment_1
+  # notify_on_success:
+  #   docker:
+  #     - image: cimg/base:stable
+  #   steps:
+  #     - slack/notify:
+  #         event: pass
+  #         channel: cicd-pipelines
+  #         template: success_tagged_deployment_1
 
           
 workflows:
@@ -340,11 +366,11 @@ workflows:
             - test-backend
             - scan-frontend
             - scan-backend
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [test-feature-branch]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [test-feature-branch]
       # - configure-infrastructure:
       #     requires: [deploy-infrastructure]
       # - run-migrations:
