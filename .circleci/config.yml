@@ -11,13 +11,6 @@ commands:
             event: fail
             channel: $SLACK_DEFAULT_CHANNEL
             template: basic_fail_1
-  notify_on_success:
-      steps:
-        - slack/notify:
-            event: pass
-            channel: $SLACK_DEFAULT_CHANNEL
-            template: success_tagged_deployment_1
-
 
   install_awscli:
     description: install AWS CLI 
@@ -341,15 +334,16 @@ jobs:
 #               # your code here
 #             fi
             
-  # notify_on_success:
-  #   docker:
-  #     - image: cimg/base:stable
-  #   steps:
-  #     - slack/notify:
-  #         event: pass
-  #         channel: cicd-pipelines
-  #         template: success_tagged_deployment_1
+  notify_on_success:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - slack/notify:
+          event: pass
+          channel: $SLACK_DEFAULT_CHANNEL
+          template: success_tagged_deployment_1
 
+   
           
 workflows:
   default:
