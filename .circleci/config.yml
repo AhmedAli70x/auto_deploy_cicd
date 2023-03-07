@@ -257,8 +257,7 @@ run-migrations: # create run-migrations
           command: |
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              # If you are using kvdb.io, generate the bucket ID "Up68KQvVZCMC32AM4i2mJR" in your local terminal first
-              curl -d '1' https://kvdb.io/Up68KQvVZCMC32AM4i2mJR/migration_${CIRCLE_WORKFLOW_ID:0:7}  
+              curl -d '1' https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  
             fi
       - revert-migrations
       - destroy-environment
@@ -394,8 +393,8 @@ workflows:
       #     filters:
       #       branches:
       #         only: [main]
-      - configure-infrastructure
-      # - run-migrations:
+      # - configure-infrastructure
+      - run-migrations
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
       #     requires: [run-migrations]
