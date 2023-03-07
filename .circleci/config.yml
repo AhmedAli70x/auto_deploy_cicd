@@ -3,7 +3,7 @@ version: 2.1
 
 orbs: 
   slack: circleci/slack@4.10.1
-  aws-cli: circleci/aws-cli@2.0.6
+  # aws-cli: circleci/aws-cli@2.0.6
 
 commands:
   notify_on_failure:
@@ -13,15 +13,15 @@ commands:
             channel: $SLACK_DEFAULT_CHANNEL
             template: basic_fail_1
 
-  install_awscli:
-    description: install AWS CLI 
-    steps:
-      - run:
-          name: Intstall AWS CLI 
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+  # install_awscli:
+  #   description: install AWS CLI 
+  #   steps:
+  #     - run:
+  #         name: Intstall AWS CLI 
+  #         command: |
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
 
   install_ansible:
     description: Install Ansible 
@@ -44,9 +44,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} --profile default
             aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
-            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} --profile default
 
   # aws-cli-cred-setup:
   #   description: set-aws credentials
@@ -188,7 +188,7 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_REGION
-          
+
       - run:
           name: Install tar utility
           command: |
