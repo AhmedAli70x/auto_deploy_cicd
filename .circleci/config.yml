@@ -11,7 +11,8 @@ commands:
       - run:
           name: Install Ansible
           command: |
-            python3 -m pip install --user ansible        
+            python3 -m pip install --user ansible   
+                 
   install_nodejs:  #we will install nodejs 13.8.0
     description: Install Node.js 13.8.0
     steps:
@@ -24,7 +25,19 @@ commands:
             # Use n version manager to use Node.js v13.8.0
             sudo npm install --global n
             sudo n 13.8.0
-            
+
+  
+  install_awscli:
+    description: install AWS CLI 
+    steps:
+      - run:
+          name: Intstall AWS CLI 
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install    
+
   revert-migrations: #this steps  for create migrations 
     description: Revert the last migration
     parameters:
@@ -36,7 +49,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/Up68KQvVZCMC32AM4i2mJR/migration_<< parameters.Workflow_ID >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/CRbAro9ns95TrR5PYBmunS/migration_<< parameters.Workflow_ID >>)
             # Logic for reverting the database state
             if (( $SUCCESS == 1 ));
             then
@@ -93,6 +106,7 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-deps
+      - notify_on_failure
 
   test-frontend: # create tests-frontend
     docker:
@@ -107,7 +121,8 @@ jobs:
             cd frontend
             npm install
             npm run test
-                
+      - notify_on_failure      
+
   test-backend: # create test-backend
     docker:
       - image: cimg/node:13.8.0
@@ -121,6 +136,7 @@ jobs:
             cd backend
             npm install
             npm run test
+      - notify_on_failure
   scan-frontend: 
     docker:
       - image: cimg/node:13.8.0
@@ -137,10 +153,7 @@ jobs:
             npm audit fix --audit-level=critical
             #npm audit --audit-level=critical
 
-      - slack/notify:
-          channel: project-give-your-application-auto-deploy-superpowersdone
-          event: fail
-          template: basic_fail_1
+      - notify_on_failure
 
   scan-backend: 
     docker:
@@ -154,14 +167,11 @@ jobs:
           command: |
             cd backend
             npm install
-            #npm install oauth-sign@^0.9.0
             npm audit fix --force --audit-level=critical
             npm audit fix --force --audit-level=critical
-            #npm audit --audit-level=critical
-      - slack/notify:
-          channel: project-give-your-application-auto-deploy-superpowersdone
-          event: fail
-          template: basic_fail_1
+            npm audit --audit-level=critical
+
+      - notify_on_failure
 
   deploy-infrastructure: 
     docker:
@@ -226,24 +236,33 @@ jobs:
       - destroy-environment
 
 
-      # Here's where you will add some code to rollback on failure      
+run-migrations: # create run-migrations
+    docker:
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - install_awscli
+   
+      - run:
+          name: Run migrations
+          command: |
+            cd backend 
+            npm install      
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
+      - run: 
+          name: Send Migration Results to kvdb.io
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              # If you are using kvdb.io, generate the bucket ID "Up68KQvVZCMC32AM4i2mJR" in your local terminal first
+              curl -d '1' https://kvdb.io/Up68KQvVZCMC32AM4i2mJR/migration_${CIRCLE_WORKFLOW_ID:0:7}  
+            fi
+      - revert-migrations
+      - destroy-environment
 
-#   run-migrations:
-#     docker:
-#       # Docker image here that supports NodeJS
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Run migrations
-#           command: |
-#             # Your code here
-#             exit 1
-#       - run:
-#           name: Send migration results to memstash
-#           command: |
-#             # Your code here
-#             exit 1
-#      # Here's where you will add some code to rollback on failure      
 
 #   deploy-frontend:
 #     docker:
