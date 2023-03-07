@@ -1,4 +1,6 @@
 version: 2.1
+
+
 orbs:   #steps for connect slack email and massage 
   slack: circleci/slack@4.10.1
 
@@ -236,7 +238,7 @@ jobs:
       - destroy-environment
 
 
-run-migrations: # create run-migrations
+  run-migrations: # create run-migrations
     docker:
       - image: cimg/node:13.8.0
     steps:
