@@ -251,10 +251,11 @@ jobs:
     steps:
       - checkout
       - install_awscli
-      
+
       - run:
           name: Run migrations
           command: |
+            pwd
             cd backend 
             npm install      
             npm run migrations > migrations_dump.txt
