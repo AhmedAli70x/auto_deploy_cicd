@@ -241,17 +241,17 @@ jobs:
 
   run-migrations: # create run-migrations
     docker: 
-      - image: mareimorsy/aws-node
+      - image: cimg/node:13.8.0
     steps:
       - checkout
+      - install_awscli
       - run:
           name: Run migrations
           command: |
-            export TYPEORM_HOST=udapeople-db.ctpi0szazgsl.us-east-1.rds.amazonaws.com
-            cd backend
-            npm install
-            npm run premigrations
-            npm run migrations
+            cd backend 
+            npm install      
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
 
       - run: 
           name: Send Migration Results to kvdb.io
