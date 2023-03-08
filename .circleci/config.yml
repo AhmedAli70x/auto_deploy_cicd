@@ -238,22 +238,21 @@ jobs:
       - destroy-environment
 
 
-  run-migrations: # create run-migrations
-    docker:
-      - image: cimg/node:13.8.0
+  run-migrations:
+    docker: 
+      - image: mareimorsy/aws-node
+
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-build]
-      - install_awscli
-   
       - run:
           name: Run migrations
           command: |
-            cd backend 
-            npm install      
-            npm run migrations > migrations_dump.txt
-            cat migrations_dump.txt
+            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            cd backend
+            npm install
+            npm run premigrations
+            npm run migrations
+            
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
