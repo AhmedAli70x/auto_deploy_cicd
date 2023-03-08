@@ -241,14 +241,12 @@ jobs:
   run-migrations: # create run-migrations
     docker: 
       - image: mareimorsy/aws-node
-
-
     steps:
       - checkout
       - run:
           name: Run migrations
           command: |
-            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export TYPEORM_HOST=udapeople-db.ctpi0szazgsl.us-east-1.rds.amazonaws.com
             cd backend
             npm install
             npm run premigrations
