@@ -403,8 +403,8 @@ workflows:
       #     filters:
       #       branches:
       #         only: [main]
-      - configure-infrastructure:
-          requires: [backend-build]
+      - configure-infrastructure
+          # requires: [backend-build]
       - run-migrations:
           requires: [configure-infrastructure]
       # - deploy-frontend:
