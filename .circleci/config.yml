@@ -242,6 +242,7 @@ jobs:
     docker: 
       - image: mareimorsy/aws-node
 
+
     steps:
       - checkout
       - run:
@@ -252,7 +253,7 @@ jobs:
             npm install
             npm run premigrations
             npm run migrations
-            
+
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
