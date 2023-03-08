@@ -186,6 +186,7 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+
       - run:
           name: Install tar utility
           command: |
@@ -227,7 +228,6 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
-      - install_awscli
       - run: apk add --update tar gzip
       - attach_workspace:
           at: ~/
@@ -243,7 +243,7 @@ jobs:
           command: |
             ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
-      - destroy-environment
+      # - destroy-environment
 
 
   run-migrations: # create run-migrations
@@ -384,7 +384,7 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      - build-backend
+      # - build-backend
       # - test-frontend:
       #     requires: [build-frontend]
       # - test-backend:
