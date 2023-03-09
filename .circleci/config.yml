@@ -310,7 +310,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://udapeople-0c973f4 --recursive
       
       - revert-migrations   
 
@@ -426,10 +426,10 @@ workflows:
       #         only: [main]
       # - configure-infrastructure
           # requires: [backend-build]
-      - run-migrations:
-          requires: [build-backend]
-      - deploy-frontend:
-          requires: [run-migrations]
+      - run-migrations
+          # requires: [build-backend]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
       # - smoke-test:
