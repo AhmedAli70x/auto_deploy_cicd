@@ -112,6 +112,7 @@ export class ConfigService {
     return this.envConfig.AUTH0_DOMAIN;
   }
 
+  
   get AUTH0_AUDIENCE(): string {
     return this.envConfig.AUTH0_AUDIENCE;
   }
