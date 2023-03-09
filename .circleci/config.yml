@@ -265,8 +265,6 @@ jobs:
             npm install      
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
-
-
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
@@ -349,9 +347,9 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            export TYPEORM_MIGRATIONS_DIR=./migrations
-            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            # export TYPEORM_MIGRATIONS_DIR=./migrations
+            # export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            # export TYPEORM_MIGRATIONS=./migrations/*.ts
             cd .circleci/ansible
             echo "Contents  of the inventory file is -------"
             cat inventory.txt
@@ -454,11 +452,11 @@ workflows:
       #         only: [main]
       # - configure-infrastructure
           # requires: [backend-build]
-      # - run-migrations
+      - run-migrations
           # requires: [build-backend]
       # - deploy-frontend
       #     requires: [run-migrations]
-      - deploy-backend
+      # - deploy-backend
       #     requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
