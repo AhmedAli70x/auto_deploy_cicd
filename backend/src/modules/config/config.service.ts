@@ -1,9 +1,6 @@
 import * as Joi from '@hapi/joi';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AboutInfo } from './about.interface';
-import { Product } from '../../modules/domain/orders/entities/product.entity';
-import { Order } from '../../modules/domain/orders/entities/order.entity';
-import { Employee } from '../domain/employees/entities/employee.entity';
 
 export interface EnvConfig {
   VERSION: string;
@@ -107,7 +104,7 @@ export class ConfigService {
       // entities: [Product, Order, Employee],
       logging: this.envConfig.TYPEORM_LOGGING === 'true',
       extra: { max: 4, min: 1 },
-      synchronize: false,
+      synchronize: true,
     };
   }
 
