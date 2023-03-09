@@ -104,7 +104,7 @@ export class ConfigService {
       // entities: [Product, Order, Employee],
       logging: this.envConfig.TYPEORM_LOGGING === 'true',
       extra: { max: 4, min: 1 },
-      synchronize: true,
+      synchronize: false,
     };
   }
 
