@@ -9,7 +9,7 @@
 - name: "Unarchieve backend files"
   unarchieve:
     src: artifact.tar.gz
-    state: ~/backend-app
+    dest: ~/backend-app
 
 - name: "Installing node dependancies"
   shell: |
