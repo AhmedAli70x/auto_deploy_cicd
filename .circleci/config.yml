@@ -264,8 +264,9 @@ jobs:
             pwd
             ls
             cd backend 
-            pwd
-            npm install      
+            
+            npm install  
+            pwd    
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run: 
