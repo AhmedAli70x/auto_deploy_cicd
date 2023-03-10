@@ -313,31 +313,8 @@ jobs:
       - image:  mareimorsy/aws-node
     steps:
       - checkout
-      # - install_awscli
-      # - install_ansible
-      # - install_nodejs
-      # - run: sudo apt-get install tar gzip -y
       - add_ssh_keys:
           fingerprints: ["e8:39:95:f8:6f:c5:e0:19:02:7b:df:d2:c8:b3:fb:09"]
-
-      # - attach_workspace:
-      #     at: ~/
-      # - restore_cache:
-      #     keys: [backend-deps]
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       cd backend
-      #       npm install
-      # - run:
-      #     name: Package backend
-      #     command: |
-      #       cd backend
-      #       npm run build
-      #       tar -czvf artifact.tar.gz dist/* package*
-      #       cd .. 
-      #       cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
-
       - run:
           name: Deploy backend
           command: |
