@@ -62,6 +62,7 @@ commands:
           command: |
             SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
             # Logic for reverting the database state
+            echo $SUCCESS
             if (( $SUCCESS == 1 ));
             then
               cd ~/projects/backend
@@ -256,7 +257,7 @@ jobs:
       - install_awscli
       - restore_cache:
           keys: [backend-deps]
-          
+
       - run:
           name: Run migrations
           command: |
@@ -310,7 +311,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-0c973f4 --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       
       - revert-migrations   
 
@@ -446,15 +447,15 @@ workflows:
       #       - test-backend
       #       - scan-frontend
       #       - scan-backend
-      # - deploy-infrastructure:
+      - deploy-infrastructure:
       #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [main]
-      # - configure-infrastructure
-          # requires: [backend-build]
-      - run-migrations
-          # requires: [build-backend]
+          filters:
+            branches:
+              only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [onfigure-infrastructure]
       # - deploy-frontend
       #     requires: [run-migrations]
       # - deploy-backend
