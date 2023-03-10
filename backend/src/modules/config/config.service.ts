@@ -1,6 +1,9 @@
 import * as Joi from '@hapi/joi';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AboutInfo } from './about.interface';
+import { Product } from '../../modules/domain/orders/entities/product.entity';
+import { Order } from '../../modules/domain/orders/entities/order.entity';
+import { Employee } from '../domain/employees/entities/employee.entity';
 
 export interface EnvConfig {
   VERSION: string;
@@ -112,7 +115,6 @@ export class ConfigService {
     return this.envConfig.AUTH0_DOMAIN;
   }
 
-  
   get AUTH0_AUDIENCE(): string {
     return this.envConfig.AUTH0_AUDIENCE;
   }
