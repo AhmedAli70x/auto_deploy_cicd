@@ -22,6 +22,7 @@ export class AddOrders1549375960026 implements MigrationInterface {
     );
   }
 
+  
   public async down(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.query(
       `ALTER TABLE "order_products_product" DROP CONSTRAINT "FK_d6c66c08b9c7e84a1b657797dff"`,
