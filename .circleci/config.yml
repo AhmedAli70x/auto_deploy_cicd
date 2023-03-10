@@ -264,7 +264,6 @@ jobs:
             pwd
             ls
             cd backend 
-            
             npm install  
             pwd    
             npm run migrations > migrations_dump.txt
@@ -276,91 +275,86 @@ jobs:
             then
               curl  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}   -d '1'
             fi
-      - revert-migrations
-      # - destroy-environment
-
 
   deploy-frontend:
     docker:
-      - image: cimg/base:stable
+      - image: mareimorsy/aws-node
     steps:
       - checkout
-      - install_awscli
-      - install_nodejs
-      - restore_cache:
-          keys: [frontend-deps]
-          
       - run:
-          name: Install dependencies
+          name: Deploy Frontend
           command: |
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
+            # Build the frontend
             cd frontend
+            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
             npm install
+            npm run build:prod
+            # aws s3 sync dist s3://udapeople-project
+            # aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://udapeople-0c973f4 --recursive
 
-      - run:
-          name: Get backend url
-          command: |
-            BACKEND_IP=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-0c973f4" \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text)
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
-
-      - run:
-          name: Deploy frontend objects
-          command: |
-            cd frontend
-            npm install
-            npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      # - run:
+      #     name: Deploy frontend objects
+      #     command: |
+      #       cd frontend
+      #       npm install
+      #       npm run build
+      #       tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+      #       aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       
-      - revert-migrations   
+      # - destroy-environment   
+      # - revert-migrations 
 
 
   deploy-backend:
     docker:
-      - image: cimg/base:stable
+      - image:  mareimorsy/aws-node
     steps:
       - checkout
-      - install_awscli
-      - install_ansible
-      - install_nodejs
-      - run: sudo apt-get install tar gzip -y
+      # - install_awscli
+      # - install_ansible
+      # - install_nodejs
+      # - run: sudo apt-get install tar gzip -y
       - add_ssh_keys:
           fingerprints: ["e8:39:95:f8:6f:c5:e0:19:02:7b:df:d2:c8:b3:fb:09"]
 
-      - attach_workspace:
-          at: ~/
-      - restore_cache:
-          keys: [backend-deps]
-      - run:
-          name: Install dependencies
-          command: |
-            cd backend
-            npm install
-      - run:
-          name: Package backend
-          command: |
-            cd backend
-            npm run build
-            tar -czvf artifact.tar.gz dist/* package*
-            cd .. 
-            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+      # - attach_workspace:
+      #     at: ~/
+      # - restore_cache:
+      #     keys: [backend-deps]
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       cd backend
+      #       npm install
+      # - run:
+      #     name: Package backend
+      #     command: |
+      #       cd backend
+      #       npm run build
+      #       tar -czvf artifact.tar.gz dist/* package*
+      #       cd .. 
+      #       cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
 
       - run:
           name: Deploy backend
           command: |
-            # export TYPEORM_MIGRATIONS_DIR=./migrations
-            # export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-            # export TYPEORM_MIGRATIONS=./migrations/*.ts
-            cd .circleci/ansible
-            echo "Contents  of the inventory file is -------"
-            cat inventory.txt
+            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            echo $TYPEORM_HOST >> .circleci/ansible/inventory.txt
+
+            cd backend
+            npm i
+            npm run build
+            tar -czf artifact.tar.gz dist/* package*
+            cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
+            ls ../.circleci/ansible/roles/deploy/
+            cd ../.circleci/ansible
             ansible-playbook -i inventory.txt deploy-backend.yml
             
       # - destroy-environment   
-      - revert-migrations 
+      # - revert-migrations 
 
 #   smoke-test:
 #     docker:
@@ -456,9 +450,9 @@ workflows:
       #         only: [main]
       # - configure-infrastructure:
           # requires: [deploy-infrastructure]
-      - run-migrations
+      # - run-migrations
           # requires: [configure-infrastructure]
-      # - deploy-frontend
+      - deploy-frontend
       #     requires: [run-migrations]
       # - deploy-backend
       #     requires: [run-migrations]
