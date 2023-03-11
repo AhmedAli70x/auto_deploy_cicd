@@ -31,9 +31,7 @@
 
   register: execute_node
 
-- name: print message
-  debug:
-    msg: "{{ execute_node.stdoutlines }}"
+
 
 - name: "Configure pm2 to start as a service"
   become: true
