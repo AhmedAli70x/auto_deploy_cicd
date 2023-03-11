@@ -224,7 +224,7 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # - destroy-environment
+      - destroy-environment
 
 
   configure-infrastructure:  # create configure-infrastructure
@@ -292,11 +292,11 @@ jobs:
             npm install
             npm run build:prod
             # aws s3 sync dist s3://udapeople-project
-            aws s3 cp dist s3://udapeople-0c973f4 --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
 
       
-      # - destroy-environment   
-      # - revert-migrations 
+      - destroy-environment   
+      - revert-migrations 
 
 
   deploy-backend:
@@ -330,8 +330,8 @@ jobs:
             cd ../.circleci/ansible
             ansible-playbook -i inventory.txt deploy-backend.yml
             
-      # - destroy-environment   
-      # - revert-migrations 
+      - destroy-environment   
+      - revert-migrations 
 
 
   smoke-test:
@@ -357,8 +357,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            FRONTEND_URL=http://udapeople-0c973f4.s3-website-us-east-1.amazonaws.com
-            
+            FRONTEND_URL=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com 
             if curl -s $FRONTEND_URL | grep "welcome"
             then
               echo "Frontend works"
@@ -366,7 +365,8 @@ jobs:
             else
               exit 2
             fi
-      # Here's where you will add some code to rollback on failure  
+      - destroy-environment   
+      - revert-migrations 
 
 #   cloudfront-update:
 #     docker:
@@ -413,40 +413,36 @@ jobs:
 
    
           
-workflows:
-  default:
+workflows:  # create workflows
+  my-workflow:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      # - notify_on_success:
-      #     requires:
-      #       - test-frontend
-      #       - test-backend
-      #       - scan-frontend
-      #       - scan-backend
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [main]
-      # - configure-infrastructure:
-          # requires: [deploy-infrastructure]
-      # - run-migrations
-          # requires: [configure-infrastructure]
-      # - deploy-frontend
-      #     requires: [run-migrations]
-      # - deploy-backend
-      #     requires: [run-migrations]
-      - smoke-test
-      #     requires: [deploy-backend, deploy-frontend]
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
       # - cloudfront-update:
       #     requires: [smoke-test]
       # - cleanup:

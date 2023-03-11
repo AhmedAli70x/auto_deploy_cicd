@@ -47,6 +47,7 @@ aws cloudformation deploy --template-file cloudfront.yml --stack-name InitialSta
     export TYPEORM_MIGRATIONS_DIR=./backend/dist/migrations
     export TYPEORM_MIGRATIONS=./backend/dist/migrations/*.ts
 
+echo "API_URL=http://3.238.162.222:3030" >> .env
 
 
 stop and delete pm2 by
