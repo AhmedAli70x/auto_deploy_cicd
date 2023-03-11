@@ -361,9 +361,9 @@ jobs:
             if curl -s $FRONTEND_URL | grep "welcome"
             then
               echo "Frontend works"
-              exit 1
+              exit 0
             else
-              exit 2
+              exit 1
             fi
       - destroy-environment   
       - revert-migrations 
@@ -426,7 +426,7 @@ workflows:  # create workflows
       #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
-      
+
       - deploy-infrastructure:
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
