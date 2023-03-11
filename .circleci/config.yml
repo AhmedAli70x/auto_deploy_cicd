@@ -318,8 +318,6 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-          
-            echo $TYPEORM_HOST 
             cd backend
             npm i
             npm run build
