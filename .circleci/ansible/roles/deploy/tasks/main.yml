@@ -12,7 +12,6 @@
     src: artifact.tar.gz
     dest: /home/ubuntu/backend
 
-
 - name: "Installing Node Dependencies"
   shell: |
     cd /home/ubuntu/backend
@@ -24,6 +23,8 @@
     pm2 start -f /home/ubuntu/backend/dist/main.js
 
   register: execute_node
+
+
 
 - name: "Configure pm2 to start as a service"
   become: true

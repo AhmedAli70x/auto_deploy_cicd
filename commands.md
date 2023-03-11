@@ -3,7 +3,10 @@
 git add .; git commit -m 'updates'; ggpush
             # python3 -m pip install --user ansible   
 postgres.ctpi0szazgsl.us-east-1.rds.amazonaws.com
-ssh -i udacity.pem ubuntu@3.237.233.22 
+
+ssh -i udacity.pem ubuntu@3.231.27.180
+curl http://3.231.27.180:3030/api/status
+
 udapeople-db.ctpi0szazgsl.us-east-1.rds.amazonaws.comps://kvdb.io/CRbAro9ns95TrR5PYBmunS/
 KVDB_BUCKET
 sudo systemctl status node_exporter
@@ -38,3 +41,18 @@ export AWS_DEFAULT_REGION= $AWS_DEFAULT_REGION
 2434
 
 aws cloudformation deploy --template-file cloudfront.yml --stack-name InitialStack --parameter-overrides WorkflowID=2434 --profile default
+
+
+    export TYPEORM_ENTITIES=./backend/dist/modules/domain/**/*.entity{.ts,.js}
+    export TYPEORM_MIGRATIONS_DIR=./backend/dist/migrations
+    export TYPEORM_MIGRATIONS=./backend/dist/migrations/*.ts
+
+
+
+stop and delete pm2 by
+
+remove backend folder by
+ sudo pm2  stop default
+sudo pm2 delete default
+sudo rm -r /home/ubuntu/backend
+then run the deploy-backend step again
