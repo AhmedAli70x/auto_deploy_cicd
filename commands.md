@@ -1,7 +1,7 @@
 3.237.233.22 
 
-git add .; git commit -m 'updates'; ggpush
-            # python3 -m pip install --user ansible   
+git add .; git commit -m 'updates'; git push origin main;
+          # python3 -m pip install --user ansible   
 postgres.ctpi0szazgsl.us-east-1.rds.amazonaws.com
 
 ssh -i udacity.pem ubuntu@3.231.27.180

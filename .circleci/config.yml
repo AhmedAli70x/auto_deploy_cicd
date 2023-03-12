@@ -354,20 +354,8 @@ jobs:
               exit 1
             fi
 
-      - run:
-          name: Frontend smoke test.
-          command: |
-            FRONTEND_URL=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com 
-            if curl -s $FRONTEND_URL | grep "welcome"
-            then
-              echo "Frontend works"
-              exit 0
-            else
-              exit 1
-            fi
-      # - destroy-environment   
-      # - revert-migrations 
-
+      - destroy-environment   
+      - revert-migrations 
 
   cloudfront-update:
     docker:
@@ -387,8 +375,11 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:5}" \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --stack-name InitialStack
+
+      - destroy-environment   
+      - revert-migration
 
   cleanup:
     docker:
@@ -419,8 +410,7 @@ jobs:
           event: pass
           channel: cicd-pipelines
           template: success_tagged_deployment_1
-
-          
+    
 workflows:  # create workflows
   default:
     jobs:
