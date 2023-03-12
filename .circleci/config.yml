@@ -365,8 +365,8 @@ jobs:
             else
               exit 1
             fi
-      - destroy-environment   
-      - revert-migrations 
+      # - destroy-environment   
+      # - revert-migrations 
 
 
   cloudfront-update:
@@ -411,7 +411,6 @@ jobs:
               aws cloudformation delete-stack --stack-name "frontend-${OldWorkflowID}"
             fi
 
-
   notify_on_success:
     docker:
       - image: cimg/base:stable
@@ -421,7 +420,6 @@ jobs:
           channel: cicd-pipelines
           template: success_tagged_deployment_1
 
-   
           
 workflows:  # create workflows
   default:
@@ -437,13 +435,13 @@ workflows:  # create workflows
       # - scan-frontend:
       #     requires: [build-frontend]
 
-      # - deploy-infrastructure:
+      - deploy-infrastructure:
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          # filters:
-          #   branches:
-          #     only: [main]
-      - configure-infrastructure
-          # requires: [deploy-infrastructure]
+          filters:
+            branches:
+              only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
