@@ -11,7 +11,7 @@ import { ConfigService } from './modules/config/config.service';
 import { ErrorFilter } from './modules/errors/error.filter';
 
 
-console.log("ci-dev-branch commit")
+console.log("ci-dev-branch commit");
 
 async function bootstrap() {
   const logger = new AppLogger();
