@@ -379,7 +379,7 @@ jobs:
               --stack-name InitialStack
 
       - destroy-environment   
-      - revert-migration
+      - revert-migrations
 
   cleanup:
     docker:
