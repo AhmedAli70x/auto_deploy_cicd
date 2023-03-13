@@ -267,7 +267,7 @@ jobs:
             cd backend 
             npm install  
             pwd    
-            premigrations:revert
+            migrations:revert
             npm run premigrations
             npm run migrations
             
