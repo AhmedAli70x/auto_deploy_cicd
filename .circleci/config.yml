@@ -232,20 +232,18 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
-      - run: apk add --update tar gzip
-      - attach_workspace:
-          at: ~/
       - add_ssh_keys:
           fingerprints: ["e8:39:95:f8:6f:c5:e0:19:02:7b:df:d2:c8:b3:fb:09"]
       - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible
-      - run:
           name: Configure server
           command: |
-            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
+            ls
+            pwd
+            cd .circleci/ansible
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            cat inventory.txt
+            # ansible-playbook -i inventory.txt configure-server.yml -vv
+            ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
 
       # - destroy-environment
 
@@ -428,14 +426,14 @@ workflows:  # create workflows
       # - scan-frontend:
       #     requires: [build-frontend]
 
-      # - deploy-infrastructure:
+      - deploy-infrastructure
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           # filters:
           #   branches:
           #     only: [master]
       # - configure-infrastructure
       #     requires: [deploy-infrastructure]
-      - run-migrations
+      # - run-migrations
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
       #     requires: [run-migrations]
