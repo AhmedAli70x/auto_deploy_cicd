@@ -250,24 +250,18 @@ jobs:
       # - destroy-environment
 
 
-  run-migrations: # create run-migrations
+  run-migrations:
     docker: 
-      - image: cimg/node:13.8.0
+      - image: mareimorsy/aws-node
+
     steps:
       - checkout
-      - install_awscli
-      - restore_cache:
-          keys: [backend-deps]
-
       - run:
           name: Run migrations
           command: |
-            pwd
-            ls
-            cd backend 
-            npm install  
-            pwd
-            ts-node -r dotenv/config node_modules/.bin/typeorm migration:revert    
+            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            cd backend
+            npm install
             npm run premigrations
             npm run migrations
             
