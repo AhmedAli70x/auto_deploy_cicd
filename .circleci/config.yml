@@ -246,10 +246,10 @@ jobs:
           command: |
             ls
             pwd
-            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
-            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
-
+            cd .circleci/ansible
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml -vv
       # - destroy-environment
 
 
