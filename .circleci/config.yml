@@ -266,8 +266,8 @@ jobs:
             ls
             cd backend 
             npm install  
-            pwd    
-            migrations:revert
+            pwd
+            ts-node -r dotenv/config node_modules/.bin/typeorm migration:revert    
             npm run premigrations
             npm run migrations
             
