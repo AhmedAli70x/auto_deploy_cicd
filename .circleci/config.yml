@@ -232,15 +232,13 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
+      - install_awscli
+      - install_ansible
       - run: apk add --update tar gzip
       - attach_workspace:
           at: ~/
       - add_ssh_keys:
           fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible
       - run:
           name: Configure server
           command: |
