@@ -275,7 +275,9 @@ jobs:
             then
               curl  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}   -d '1'
             fi
-
+            
+      - destroy-environment   
+      - revert-migrations
   deploy-frontend:
     docker:
       - image: mareimorsy/aws-node
@@ -429,7 +431,7 @@ workflows:  # create workflows
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: [main]
+              only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
