@@ -310,6 +310,8 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Deploy backend
           command: |
