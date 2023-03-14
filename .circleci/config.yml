@@ -69,6 +69,7 @@ commands:
               npm install
               npm run migration:revert
             fi
+            
   destroy-environment: #step for create destroy-environment
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -229,40 +230,45 @@ jobs:
 
   configure-infrastructure:  # create configure-infrastructure
     docker:
-      - image: mareimorsy/aws-node
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
+      - run: apk add --update tar gzip
+      - attach_workspace:
+          at: ~/
       - add_ssh_keys:
-          fingerprints: ["e8:39:95:f8:6f:c5:e0:19:02:7b:df:d2:c8:b3:fb:09"]
+          fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
       - run:
           name: Configure server
           command: |
-            ls
-            pwd
-            cd .circleci/ansible
-            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml -vv
-            # ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
-
+            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
       # - destroy-environment
 
 
-  run-migrations:
+  run-migrations: # create run-migrations
     docker: 
-      - image: mareimorsy/aws-node
-
+      - image: cimg/node:13.8.0
     steps:
       - checkout
+      - install_awscli
+      - restore_cache:
+          keys: [backend-deps]
+
       - run:
           name: Run migrations
           command: |
-            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            cd backend
-            npm install
-            npm run premigrations
-            npm run migrations
-            
+            pwd
+            ls
+            cd backend 
+            npm install  
+            pwd    
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
@@ -271,9 +277,6 @@ jobs:
               curl  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}   -d '1'
             fi
 
-      # - destroy-environment   
-      # - revert-migrations
-      
   deploy-frontend:
     docker:
       - image: mareimorsy/aws-node
@@ -304,9 +307,6 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
-
-      - attach_workspace:
-          at: ~/
       - run:
           name: Deploy backend
           command: |
@@ -357,7 +357,6 @@ jobs:
 
       - destroy-environment   
       - revert-migrations 
-
 
   cloudfront-update:
     docker:
@@ -427,22 +426,22 @@ workflows:  # create workflows
       # - scan-frontend:
       #     requires: [build-frontend]
 
-      # - deploy-infrastructure:
+      - deploy-infrastructure:
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          # filters:
-          #   branches:
-          #     only: [master]
-      # - configure-infrastructure
-      #     requires: [deploy-infrastructure]
-      - run-migrations
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+          filters:
+            branches:
+              only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
