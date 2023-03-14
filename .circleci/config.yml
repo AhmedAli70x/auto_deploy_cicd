@@ -267,18 +267,8 @@ jobs:
             npm install  
             pwd    
             npm run premigrations
-            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}"
-            echo "TYPEORM_HOST=${TYPEORM_HOST}" 
-            echo "TYPEORM_PORT=${TYPEORM_PORT}" 
-            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" 
-            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" 
-            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" 
-            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" 
-            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" 
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
-
-
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
