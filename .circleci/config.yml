@@ -278,26 +278,29 @@ jobs:
             fi
       - revert-migrations
 
-      
-  deploy-frontend:
+
+  deploy-frontend: # create deploy-frontend
     docker:
-      - image: cimg/base:stable
+      - image: cimg/node:13.8.0
     steps:
       - checkout
-      - install_awscli
-      - install_nodejs
+      - run: sudo apt-get install tar gzip -y
       - restore_cache:
-          keys: [frontend-deps]
+          keys: [frontend-build]
       - run:
           name: Install dependencies
           command: |
-            cd frontend
-            npm install 
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install   
       - run:
           name: Get backend url
           command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            echo API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
+            export BACKEND_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
       - run:
           name: Deploy frontend objects
@@ -308,7 +311,6 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
-      - revert-migrations
 
 
   deploy-backend:
@@ -437,22 +439,22 @@ workflows:  # create workflows
       # - scan-frontend:
       #     requires: [build-frontend]
 
-      - deploy-infrastructure:
+      # - deploy-infrastructure:
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          filters:
-            branches:
-              only: [master]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      #     filters:
+      #       branches:
+      #         only: [master]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      - deploy-frontend
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      # - cleanup:
+      #     requires: [cloudfront-update]
