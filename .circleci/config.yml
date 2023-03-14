@@ -6,6 +6,7 @@ orbs:   #steps for connect slack email and massage
 
 
 commands:
+
   notify_on_failure:
       steps:
         - slack/notify:
@@ -84,6 +85,8 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
             aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+
+
 
 jobs: 
   build-frontend: 
@@ -249,7 +252,6 @@ jobs:
             cat .circleci/ansible/inventory.txt
       # - destroy-environment
 
-
   run-migrations: # create run-migrations
     docker: 
       - image: cimg/node:13.8.0
@@ -265,16 +267,18 @@ jobs:
             npm install  
             pwd    
             npm run premigrations
-            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
-            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
-            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
-            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
-            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
-            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
-            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
-            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
+            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}"
+            echo "TYPEORM_HOST=${TYPEORM_HOST}" 
+            echo "TYPEORM_PORT=${TYPEORM_PORT}" 
+            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" 
+            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" 
+            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" 
+            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" 
+            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" 
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
+
+
       - run: 
           name: Send Migration Results to kvdb.io
           command: |
@@ -282,6 +286,7 @@ jobs:
             then
               curl  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}   -d '1'
             fi
+      - revert-migrations
 
   deploy-frontend:
     docker:
