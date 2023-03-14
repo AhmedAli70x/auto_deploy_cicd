@@ -256,9 +256,6 @@ jobs:
     steps:
       - checkout
       - install_awscli
-      - restore_cache:
-          keys: [backend-deps]
-
       - run:
           name: Run migrations
           command: |
@@ -267,6 +264,7 @@ jobs:
             cd backend 
             npm install  
             pwd    
+            npm run premigrations
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run: 
