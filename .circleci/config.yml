@@ -278,63 +278,81 @@ jobs:
             fi
       - revert-migrations
 
+
   deploy-frontend:
     docker:
-      - image: mareimorsy/aws-node
+      - image: cimg/base:stable
     steps:
       - checkout
+      - install_awscli
+      - install_nodejs
+      - restore_cache:
+          keys: [frontend-deps]
       - run:
-          name: Deploy Frontend
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm install 
+      - run:
+          name: Get backend url
           command: |
             export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-             echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
-            # Build the frontend
+            echo API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Deploy frontend objects
+          command: |
             cd frontend
-            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
             npm install
-            npm run build:prod
-            # aws s3 sync dist s3://udapeople-project
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - destroy-environment
+      - revert-migrations
 
-      
-      - destroy-environment   
-      - revert-migrations 
 
 
   deploy-backend:
     docker:
-      - image:  mareimorsy/aws-node
+      - image: cimg/node:13.8.0
     steps:
       - checkout
+      - run: sudo apt-get install tar gzip -y  
+      - install_ansible
+      - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
+          fingerprints: ["9b:1a:fe:5c:65:c9:70:eb:52:62:a9:fc:72:18:38:09"]
+      - attach_workspace:
+          at: ~/
+      - restore_cache:
+          keys: [backend-deps]
+      - run:
+          name: install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: Package backend
+          command: |
+            cd backend
+            npm run build
+            tar -czvf artifact.tar.gz dist/* package*
+            cd .. 
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            
       - run:
           name: Deploy backend
           command: |
-
-            export EC2_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            echo $EC2_IP >> .circleci/ansible/inventory.txt
-
-            cd backend
-            npm i
-            npm run build
-            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
-            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
-            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
-            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
-            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
-            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
-            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
-            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
-            tar -czf artifact.tar.gz dist/* package* .env
-            cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
-            ls ../.circleci/ansible/roles/deploy/
-            cd ../.circleci/ansible
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            cd .circleci/ansible
+            echo "Contents  of the inventory file is as: "
+            cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
             
       - destroy-environment   
       - revert-migrations 
-
 
   smoke-test:
     docker:
@@ -440,9 +458,9 @@ workflows:  # create workflows
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
