@@ -315,18 +315,31 @@ jobs:
 
   deploy-backend:
     docker:
-      - image:  mareimorsy/aws-node
+      - image:  cimg/base:stable
     steps:
       - checkout
+      - install_awscli
+      - install_ansible
+      - install_nodejs
+
       - add_ssh_keys:
           fingerprints: ["0c:89:f6:38:d3:e2:4d:e5:bc:87:bc:e7:a4:9e:e9:ab"]
+          
+      - run:
+          name: Package backend
+          command: |
+            cd backend
+            npm run build
+            tar -czvf artifact.tar.gz dist/* package*
+            cd .. 
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+
       - run:
           name: Deploy backend
           command: |
-
             export EC2_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             echo $EC2_IP >> .circleci/ansible/inventory.txt
-
+            
             cd backend
             npm i
             npm run build
@@ -343,7 +356,7 @@ jobs:
             ls ../.circleci/ansible/roles/deploy/
             cd ../.circleci/ansible
             ansible-playbook -i inventory.txt deploy-backend.yml
-            
+               
       # - destroy-environment   
       # - revert-migrations 
 
@@ -451,7 +464,7 @@ workflows:  # create workflows
       # - deploy-frontend:
       #     requires: [run-migrations]
 
-      
+
       - deploy-backend
           # requires: [run-migrations]
       # - smoke-test:
