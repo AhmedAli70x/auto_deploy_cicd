@@ -23,8 +23,6 @@
 
 
 
-
-
 - name: "Configure pm2 to start as a service"
   become: true
   shell: |
