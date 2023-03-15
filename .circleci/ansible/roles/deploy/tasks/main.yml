@@ -22,7 +22,6 @@
     pm2 start -f /home/ubuntu/backend/dist/main.js
 
 
-
 - name: "Configure pm2 to start as a service"
   become: true
   shell: |
