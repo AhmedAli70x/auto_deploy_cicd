@@ -63,7 +63,7 @@ sudo rm -r /home/ubuntu/backend
 then run the deploy-backend step again
 
 
-ssh -i udacity.pem ubuntu@3.238.62.80
+ssh -i udacity.pem ubuntu@100.25.163.187
 prometheus ec2 commands:
 
 sudo useradd --no-create-home prometheus
