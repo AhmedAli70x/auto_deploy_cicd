@@ -60,12 +60,14 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            export SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
+            export SUCCESS=$(curl --insecure  https://kvdb.io/CRbAro9ns95TrR5PYBmunS/migration_<< parameters.Workflow_ID >>)
             # Logic for reverting the database state
             echo $SUCCESS
             if (( $SUCCESS == 1 ));
             then
-              cd ~/projects/backend
+              pwd
+              ls 
+              cd ~/project/backend
               npm install
               npm run migration:revert
             fi
@@ -277,6 +279,7 @@ jobs:
             fi
 
 
+
   deploy-frontend:
     docker:
       - image: mareimorsy/aws-node
@@ -285,7 +288,9 @@ jobs:
       - run:
           name: Deploy Frontend
           command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1  \  
+            --filters Name=tag:Project,Values=Udapeople \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
             # Build the frontend
             cd frontend
@@ -306,7 +311,9 @@ jobs:
           name: Deploy backend
           command: |
 
-            export EC2_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export EC2_IP=$(aws ec2 describe-instances --region us-east-1 \
+            --filters Name=tag:Project,Values=Udapeople \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             echo $EC2_IP >> .circleci/ansible/inventory.txt
 
             cd backend
@@ -338,7 +345,9 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=Udapeople \
+            --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             
             BACKEND_URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
             

@@ -102,8 +102,18 @@ groups:
       severity: page
     annotations:
       summary: Server(s) are down.
+https://hooks.slack.com/services/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
 
 node_memory_MemFree_bytes
+
+curl --insecure  https://kvdb.io/CRbAro9ns95TrR5PYBmunS/migration_4795637
+            export SUCCESS=$( curl --insecure  https://kvdb.io/CRbAro9ns95TrR5PYBmunS/migration_4795637 )
+
+            echo $SUCCESS
+            if (( $SUCCESS == 1 ));
+            then
+            echo "ture $SUCCESS "
+            fi
 
 route:
   group_by: [Alertname]
