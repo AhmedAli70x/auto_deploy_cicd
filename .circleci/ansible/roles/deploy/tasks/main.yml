@@ -16,6 +16,7 @@
   shell: |
     cd /home/ubuntu/backend
     npm i
+    
 - name: Start the app
   shell: |
     pm2 stop default
