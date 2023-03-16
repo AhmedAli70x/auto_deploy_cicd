@@ -115,8 +115,8 @@ receivers:
   - to: ahmedali70x@gmail.com
     from: ahmed.atef7x@gmail.com
     smarthost: smtp.gmail.com:587
-    auth_username: ahmedali70x@gmail.com
-    auth_identity: ahmedali70x@gmail.com
+    auth_username: ahmed.atef7x@gmail.com
+    auth_identity: ahmed.atef7x@gmail.com
     auth_password: lktgzxujuhtldaid
 
 stop and delete pm2 by
