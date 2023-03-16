@@ -355,9 +355,9 @@ jobs:
             if curl -s $BACKEND_URL | grep "ok"
             then
               echo "Backend works"
-              exit 1
+              exit 0
             else
-              exit 2
+              exit 1
             fi
             pwd
       - destroy-environment   
