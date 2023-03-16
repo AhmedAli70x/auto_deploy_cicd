@@ -42,7 +42,7 @@ export AWS_DEFAULT_REGION= $AWS_DEFAULT_REGION
   ]
 }
 
-2434
+aws sts get-caller-identity
 
 aws cloudformation deploy --template-file cloudfront.yml --stack-name InitialStack --parameter-overrides WorkflowID=2434 --profile default
 
@@ -54,6 +54,71 @@ aws cloudformation deploy --template-file cloudfront.yml --stack-name InitialSta
 echo "API_URL=http://3.238.162.222:3030" >> .env
 
 
+wget https://github.com/prometheus/prometheus/releases/download/v2.19.0/prometheus-2.19.0.linux-amd64.tar.gz
+tar xvfz prometheus-2.19.0.linux-amd64.tar.gz
+
+sudo cp prometheus-2.19.0.linux-amd64/prometheus /usr/local/bin
+sudo cp prometheus-2.19.0.linux-amd64/promtool /usr/local/bin/
+sudo cp -r prometheus-2.19.0.linux-amd64/consoles /etc/prometheus
+sudo cp -r prometheus-2.19.0.linux-amd64/console_libraries /etc/prometheus
+
+sudo cp prometheus-2.19.0.linux-amd64/promtool /usr/local/bin/
+rm -rf prometheus-2.19.0.linux-amd64.tar.gz prometheus-2.19.0.linux-amd64
+
+
+wget https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+tar xzf node_exporter-1.5.0.linux-amd64.tar.gz
+sudo cp node_exporter-1.5.0.linux-amd64/node_exporter /usr/local/bin/node_exporter
+rm -rf node_exporter-1.5.0.linux-amd64.tar.gz node_exporter-1.5.0.linux-amd64
+
+avg(rate(node_cpu_seconds_total{mode!="idle"}[1m])) by (instance)*100
+node_memory_Cached_bytes + node_memory_Buffers_bytes + node_memory_MemFree_bytes
+node_filesystem_free_bytes{device="/dev/root"} 
+
+[webhook]
+https://hooks.slack.com/services/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
+
+global:
+  resolve_timeout: 1m
+  slack_api_url: 'https://hooks.slack.com/services/B04TXQBLV9C/RpjCS5V09IoO0ygNIq01N7kc'
+ 
+route:
+  receiver: 'slack-notifications'
+ 
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+    - channel: 'dev-null'
+      send_resolved: true
+
+
+groups:
+- name: server_is_down
+  rules:
+  - alert: server_is_down
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: page
+    annotations:
+      summary: Server(s) are down.
+
+node_memory_MemFree_bytes
+
+route:
+  group_by: [Alertname]
+  receiver: email-me
+
+receivers:
+- name: email-me
+  email_configs:
+  - to: ahmedali70x@gmail.com
+    from: ahmed.atef7x@gmail.com
+    smarthost: smtp.gmail.com:587
+    auth_username: ahmedali70x@gmail.com
+    auth_identity: ahmedali70x@gmail.com
+    auth_password: lktgzxujuhtldaid
+
 stop and delete pm2 by
 
 remove backend folder by
@@ -64,6 +129,7 @@ then run the deploy-backend step again
 
 
 ssh -i udacity.pem ubuntu@100.25.163.187
+ssh -i udacity.pem ubuntu@54.87.240.111
 prometheus ec2 commands:
 
 sudo useradd --no-create-home prometheus
