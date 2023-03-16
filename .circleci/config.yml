@@ -209,7 +209,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople \
+              --tags Project=Udapeople \
               --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
               
@@ -222,6 +222,7 @@ jobs:
               --output text)
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -248,6 +249,7 @@ jobs:
           command: |
             ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
+
       - destroy-environment
 
 
@@ -259,7 +261,6 @@ jobs:
       - install_awscli
       - restore_cache:
           keys: [backend-deps]
-
       - run:
           name: Run migrations
           command: |
@@ -374,7 +375,7 @@ jobs:
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-            curl  https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            curl -k https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
           command: |
@@ -384,10 +385,6 @@ jobs:
               --stack-name InitialStack
               --tags project=udapeople
 
-      - destroy-environment   
-      - revert-migrations
-  
-
 
   cleanup: # createe cleanup
     docker:
@@ -395,7 +392,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Remove old stacks and files
+          name: Remove old stacks
           command: |
             yum install -y curl         
             export OLDWORKFLOWID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/old_workflow_id)
