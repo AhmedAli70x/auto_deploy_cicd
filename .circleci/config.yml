@@ -289,9 +289,9 @@ jobs:
       - run:
           name: Deploy Frontend
           command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1  \  
-            --filters Name=tag:Project,Values=Udapeople \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances   \  
+            --filters Name=tag:Project, Values=Udapeople \
+            --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
             # Build the frontend
             cd frontend
@@ -312,9 +312,11 @@ jobs:
           name: Deploy backend
           command: |
 
-            export EC2_IP=$(aws ec2 describe-instances --region us-east-1 \
+            export EC2_IP=$(aws ec2 describe-instances  \
             --filters Name=tag:Project,Values=Udapeople \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+   
+            echo $EC2_IP
             echo $EC2_IP >> .circleci/ansible/inventory.txt
 
             cd backend
@@ -441,7 +443,7 @@ workflows:  # create workflows
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [deploy-backend]
+          requires: [deploy-infrastructure]
       - deploy-backend:
           requires: [run-migrations]
       - smoke-test:
