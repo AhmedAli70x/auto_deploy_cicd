@@ -441,7 +441,7 @@ workflows:  # create workflows
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [deploy-infrastructure]
+          requires: [deploy-backend]
       - deploy-backend:
           requires: [run-migrations]
       - smoke-test:
