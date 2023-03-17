@@ -376,13 +376,13 @@ jobs:
                       --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
             curl -k https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${CIRCLE_WORKFLOW_ID:0:7}"
-      - run:
-          name: Update cloudfront distribution
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --stack-name InitialStack
+      # - run:
+      #     name: Update cloudfront distribution
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/cloudfront.yml \
+      #         --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --stack-name InitialStack
 
 
   cleanup: # createe cleanup
@@ -396,12 +396,10 @@ jobs:
             yum install -y curl         
             export OLDWORKFLOWID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/old_workflow_id)
             echo Old Workflow ID: $OLDWORKFLOWID 
-            # echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-            # Fetch the stack names 
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
             --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"          
-            if [[ "${STACKS[@]}" =~ "${OLDWORKFLOWID}" ]]
+            if [[ "${STACKS[@]}" =~ ${OLDWORKFLOWID} ]]
             then
               aws s3 rm "s3://udapeople-${OLDWORKFLOWID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OLDWORKFLOWID}"
@@ -438,17 +436,17 @@ workflows:  # create workflows
           filters:
             branches:
               only: [main]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [deploy-infrastructure]
-      # - deploy-backend:
-      #     requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
+      - configure-infrastructure:
           requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [deploy-infrastructure]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
